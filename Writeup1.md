@@ -2,7 +2,9 @@
 
 ## 1. Finding the IP
 
-On the Windows machine, we use `ipconfig` to get the network address:
+> Please note that this section may differ depending on your network configuration.
+
+First we get our network address
 ```
 PS C:\Users\user> ipconfig
 Carte réseau sans fil Wi-Fi :
@@ -11,34 +13,34 @@ Carte réseau sans fil Wi-Fi :
    Adresse IPv6. . . . . . . . . . . . . .: 2a04:cec0:10f7:c1d1:83b9:f706:901f:e740
    Adresse IPv6 temporaire . . . . . . . .: 2a04:cec0:10f7:c1d1:6919:2648:8564:bd77
    Adresse IPv6 de liaison locale. . . . .: fe80::9b0e:c803:3db7:d80c%17
-   Adresse IPv4. . . . . . . . . . . . . .: 192.168.13.56
+   Adresse IPv4. . . . . . . . . . . . . .: 192.168.140.56
    Masque de sous-réseau. . . . . . . . . : 255.255.255.0
    Passerelle par défaut. . . . . . . . . : fe80::24a7:dbff:fec2:243%17
-                                       192.168.13.206
+                                       192.168.140.206
 ```
 
-In this case the network ip is `192.168.13.0`
+In this case the network ip and mask are `192.168.140.0/24`
 
-On the Kali-Linux machine, we use `nmap -sn` to scan the network for all hosts
+First we use `nmap -sn` to scan the network for all hosts
 ```
-nmap -sn 192.168.13.0/24
+nmap -sn 192.168.140.0/24
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-23 17:35 CEST
-Nmap scan report for 192.168.13.112
+Nmap scan report for 192.168.140.112
 Host is up (0.0012s latency).
-Nmap scan report for 192.168.13.206
+Nmap scan report for 192.168.140.206
 Host is up (0.0066s latency).
 Nmap done: 256 IP addresses (2 hosts up) scanned in 43.33 seconds
 ```
 
-We get two hosts, one is `192.168.13.206` which is the address present in the `ipconfig`, the other one is the VM
+We get two hosts, one is `192.168.140.206` which is the address present in the `ipconfig`, the other one is the VM
 
 ## 2. Look for running services
 
 Let's scan this ip with `nmap`
 ```
-nmap 192.168.13.112
+nmap 192.168.140.112
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-29 18:18 CEST
-Nmap scan report for 192.168.13.112
+Nmap scan report for 192.168.140.112
 Host is up (0.00032s latency).
 Not shown: 994 closed tcp ports (reset)
 PORT    STATE SERVICE
@@ -55,7 +57,7 @@ PORT    STATE SERVICE
 Ports 80 and 443 are open which means a website is present on the machine, let's fuzz it with `dirb`
 
 ```
-dirb https://192.168.13.112
+dirb https://192.168.140.112
 
 -----------------
 DIRB v2.22
@@ -63,19 +65,19 @@ By The Dark Raver
 -----------------
 
 START_TIME: Wed May 29 18:20:23 2024
-URL_BASE: https://192.168.13.112/
+URL_BASE: https://192.168.140.112/
 WORDLIST_FILES: /usr/share/dirb/wordlists/common.txt
 
 -----------------
 
 GENERATED WORDS: 4612
 
----- Scanning URL: https://192.168.13.112/ ----
-+ https://192.168.13.112/cgi-bin/ (CODE:403|SIZE:291)
-==> DIRECTORY: https://192.168.13.112/forum/
-==> DIRECTORY: https://192.168.13.112/phpmyadmin/
-+ https://192.168.13.112/server-status (CODE:403|SIZE:296)
-==> DIRECTORY: https://192.168.13.112/webmail/
+---- Scanning URL: https://192.168.140.112/ ----
++ https://192.168.140.112/cgi-bin/ (CODE:403|SIZE:291)
+==> DIRECTORY: https://192.168.140.112/forum/
+==> DIRECTORY: https://192.168.140.112/phpmyadmin/
++ https://192.168.140.112/server-status (CODE:403|SIZE:296)
+==> DIRECTORY: https://192.168.140.112/webmail/
 
 ...
 ```
@@ -84,7 +86,7 @@ Let's access those links with our web browser
 
 ## 4. Forum Inspection
 
-Here is `https://192.168.13.112/forum`
+Here is `https://192.168.140.112/forum`
 
 ![](https://cdn.discordapp.com/attachments/1077902420316799028/1245415659970494504/image.png?ex=6658ab38&is=665759b8&hm=4437c69e262c3006d8eefc7e4e374ebabb69ff27967e637a3e9966ba31a26262&)
 
@@ -160,21 +162,21 @@ Knowing the forum is using Apache, the app location is usually `/var/www`
 Using `dirb` we can scan the forum for directories
 
 ```
-dirb https://192.168.50.112/forum
+dirb https://192.168.140.112/forum
 
----- Scanning URL: https://192.168.50.112/forum/ ----
-+ https://192.168.50.112/forum/backup (CODE:403|SIZE:295)
-+ https://192.168.50.112/forum/config (CODE:403|SIZE:295)
-==> DIRECTORY: https://192.168.50.112/forum/images/
-==> DIRECTORY: https://192.168.50.112/forum/includes/
-+ https://192.168.50.112/forum/index (CODE:200|SIZE:4984)
-+ https://192.168.50.112/forum/index.php (CODE:200|SIZE:4984)
-==> DIRECTORY: https://192.168.50.112/forum/js/
-==> DIRECTORY: https://192.168.50.112/forum/lang/
-==> DIRECTORY: https://192.168.50.112/forum/modules/
-==> DIRECTORY: https://192.168.50.112/forum/templates_c/
-==> DIRECTORY: https://192.168.50.112/forum/themes/
-==> DIRECTORY: https://192.168.50.112/forum/update/
+---- Scanning URL: https://192.168.140.112/forum/ ----
++ https://192.168.140.112/forum/backup (CODE:403|SIZE:295)
++ https://192.168.140.112/forum/config (CODE:403|SIZE:295)
+==> DIRECTORY: https://192.168.140.112/forum/images/
+==> DIRECTORY: https://192.168.140.112/forum/includes/
++ https://192.168.140.112/forum/index (CODE:200|SIZE:4984)
++ https://192.168.140.112/forum/index.php (CODE:200|SIZE:4984)
+==> DIRECTORY: https://192.168.140.112/forum/js/
+==> DIRECTORY: https://192.168.140.112/forum/lang/
+==> DIRECTORY: https://192.168.140.112/forum/modules/
+==> DIRECTORY: https://192.168.140.112/forum/templates_c/
+==> DIRECTORY: https://192.168.140.112/forum/themes/
+==> DIRECTORY: https://192.168.140.112/forum/update/
 ```
 
 Now we can try uploading the `shell.php` file on each directory using the command in `Phpmyadmin`
@@ -209,5 +211,5 @@ This looks like credentials, we can use them to connect to the FTP
 
 > password: `G!@M6f4Eatau{sF"`
 
-
+![](https://cdn.discordapp.com/attachments/1077902420316799028/1246129227523293194/image.png?ex=665b43c7&is=6659f247&hm=12cfea29d5a32693384d5e39088dd7fb141615cf9d78de54894ec423c60b325e&)
 
