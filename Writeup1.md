@@ -88,7 +88,7 @@ Let's access those links with our web browser
 
 Here is `https://192.168.140.112/forum`
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245415659970494504/image.png?ex=6658ab38&is=665759b8&hm=4437c69e262c3006d8eefc7e4e374ebabb69ff27967e637a3e9966ba31a26262&)
+![Imgur](https://i.imgur.com/9QEQoCv.png)
 
 After close inspection the `Problem login` topic is a log file containing what looks to be login credentials
 
@@ -110,7 +110,7 @@ These credentials allows us to connect to the forum as the user `lmezard`
 
 After loggin in we get access to the user's profile which gives us an email
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245419184717037568/image.png?ex=6658ae80&is=66575d00&hm=43efedf37e46d8d4e5354e7b726f97dd2f186a7ffb1262281ffa2fe062617a80&)
+![Imgur](https://i.imgur.com/WFjQWXt.png)
 
 We can try using this email and the password to access the webmail
 
@@ -122,7 +122,7 @@ We can try using this email and the password to access the webmail
 
 After loggin in we get access to two mails
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245421042978127872/image.png?ex=6658b03b&is=66575ebb&hm=146d9c4a8d086d886f912e08d7407ff3c4fe19b577ba3fdaa9cc8650025a7252&)
+![Imgur](https://i.imgur.com/0Tu8PpH.png)
 
 
 The `DB Access` mail contains login credentials
@@ -143,7 +143,7 @@ Best regards.
 
 After login into Phpmyadmin we get a full `root` access to all DBs in the service
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245429337885507604/image.png?ex=6658b7f5&is=66576675&hm=ad8556dd86f1f1d149a965c4b5a3911c976ba4e713965a8d8002838e090b62b3&)
+![Imgur](https://i.imgur.com/nijo5Hj.png)
 
 Now we will try to get a `shell` to the machine by injecting a new `php` page into the forum that will execute the commands we give it
 
@@ -183,11 +183,11 @@ Now we can try uploading the `shell.php` file on each directory using the comman
 
 It only worked in `/forum/templaces_c` (the path is `/var/www/forum/templates_c`)
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245766116358230147/image.png?ex=6659f19b&is=6658a01b&hm=64619b75648fcce9189b2e93323053c70ace1c31b6af814b309132c53f7bc55a&)
+![Imgur](https://i.imgur.com/WQTxCBU.png)
 
 Now we can use this script as a webshell passing `cmd=COMMAND_TO_EXECUTE` as argument
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245773173375369356/image.png?ex=6659f82d&is=6658a6ad&hm=3633da56275f67b5993db873478b677bc6f55c12655501dfc86d95aade5ee7dc&)
+![Imgur](https://i.imgur.com/f1uJEy6.png)
 
 ## 9. Getting a FTP access
 
@@ -195,7 +195,7 @@ Now that we have a shell access as user `www-data`, we will look into the machin
 
 Starting in `/home/` we can see multiple users
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1245779549157855376/image.png?ex=6659fe1d&is=6658ac9d&hm=952aa37be837c06746e5deb5886943c3671fe882f5896444b7f0b4434a78abd9&)
+![Imgur](https://i.imgur.com/9A92ko1.png)
 
 We have `read` permissions only on the `/home/LOOKATME` directory
 
@@ -211,5 +211,5 @@ This looks like credentials, we can use them to connect to the FTP
 
 > password: `G!@M6f4Eatau{sF"`
 
-![](https://cdn.discordapp.com/attachments/1077902420316799028/1246129227523293194/image.png?ex=665b43c7&is=6659f247&hm=12cfea29d5a32693384d5e39088dd7fb141615cf9d78de54894ec423c60b325e&)
+![Imgur](https://i.imgur.com/dKhMw9p.png)
 
