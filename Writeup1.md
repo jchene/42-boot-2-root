@@ -2,7 +2,7 @@
 
 ## Writeups Map
 
-![](https://i.imgur.com/LjQEswl.png)
+![Imgur](https://i.imgur.com/LjQEswl.png)
 
 ## Summary
 
@@ -14,7 +14,7 @@
 - [6.2 Logging into the webmail](#62-logging-into-the-webmail)
 - [7. Logging into Phpmyadmin](#7-logging-into-phpmyadmin)
 - [8.2 Injecting a webshell](#82-injecting-a-webshell)
-- [9. Getting a FTP access](#9-getting-a-ftp-access)
+- [9. Getting a FTP access](#92-getting-a-ftp-access)
 - [10.2 Getting SSH access as laurie](#102-getting-ssh-access-as-laurie)
 - [11.2 Getting SSH access as thor](#112-getting-ssh-access-as-thor)
 - [12. Getting SSH access as zaz](#12-getting-ssh-access-as-zaz)
@@ -30,7 +30,7 @@ I have setup the VM in bridged network mode which means it has it's own ip on my
 
 First we get our network address
 
-```
+```text
 PS C:\Users\user> ipconfig
 Carte réseau sans fil Wi-Fi :
 
@@ -47,7 +47,8 @@ Carte réseau sans fil Wi-Fi :
 In this case the network ip and mask are `192.168.140.0/24`
 
 First we use `nmap -sn` to scan the network for all hosts
-```
+
+```text
 nmap -sn 192.168.140.0/24
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-23 17:35 CEST
 Nmap scan report for 192.168.140.112
@@ -62,7 +63,8 @@ We get two hosts, one is `192.168.140.206` which is the address present in the `
 ### 2. Looking for running services
 
 Let's scan this ip with `nmap`
-```
+
+```text
 nmap 192.168.140.112
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-29 18:18 CEST
 Nmap scan report for 192.168.140.112
@@ -81,7 +83,7 @@ PORT    STATE SERVICE
 
 Ports 80 and 443 are open which means a website is present on the machine, let's fuzz it with `dirb`
 
-```
+```text
 dirb https://192.168.140.112
 
 -----------------
@@ -117,7 +119,7 @@ Here is `https://192.168.140.112/forum`
 
 After close inspection the `Problem login` topic is a log file containing what looks to be login credentials
 
-```
+```text
 ...
 Oct 5 08:45:29 BornToSecHackMe sshd[7547]: Failed password for invalid user !q\]Ej?*5K5cy*AJ from 161.202.39.38 port 57764 ssh2
 Oct 5 08:45:29 BornToSecHackMe sshd[7547]: Received disconnect from 161.202.39.38: 3: com.jcraft.jsch.JSchException: Auth fail [preauth]
@@ -130,7 +132,7 @@ These credentials allows us to connect to the forum as the user `lmezard`
 ### 5. Logging into the forum
 
 > login: `lmezard`
-
+>
 > password: `!q\]Ej?*5K5cy*AJ`
 
 After loggin in we get access to the user's profile which gives us an email
@@ -140,35 +142,35 @@ After loggin in we get access to the user's profile which gives us an email
 We can try using this email and the password to access the webmail or get a SSH access
 
 > From this step you can continue to all the following steps
-> - [6.1 Getting SSH access](#61-getting-ssh-access-as-laurieborntosecnet)
+>
+> - [6.1 Getting SSH access as laurie@borntosec](#61-getting-ssh-access-as-laurieborntosec)
 > - [6.2 Logging into the webmail](#62-logging-into-the-webmail)
 
-### 6.1 Getting SSH access as laurie@borntosec.net
+### 6.1 Getting SSH access as laurie@borntosec
 
 > login: `laurie@borntosec.net`
-
-> password: `!q\]Ej?*5K5cy*AJ` 
+> password: `!q\]Ej?*5K5cy*AJ`
 
 You can use the same credentials as the webmail to get a SSH access into the machine
 
 > From this step you can continue to all the following steps
+>
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 > - [14.1 Using fakeroot](./Writeup7.md#141-using-fakeroot)
 
 ### 6.2 Logging into the webmail
 
 > login: `laurie@borntosec.net`
-
-> password: `!q\]Ej?*5K5cy*AJ` 
+>
+> password: `!q\]Ej?*5K5cy*AJ`
 
 After loggin in we get access to two mails
 
 ![Imgur](https://i.imgur.com/0Tu8PpH.png)
 
-
 The `DB Access` mail contains login credentials
 
-```
+```text
 Hey Laurie,
 
 You cant connect to the databases now. Use root/Fg-'kKXBj87E:aJ$
@@ -179,7 +181,7 @@ Best regards.
 ### 7. Logging into Phpmyadmin
 
 > login: `root`
-
+>
 > password: `Fg-'kKXBj87E:aJ$`
 
 After login into Phpmyadmin we get a full `root` access to all DBs in the service
@@ -189,9 +191,10 @@ After login into Phpmyadmin we get a full `root` access to all DBs in the servic
 Now we will try to get a `shell` to the machine by injecting a new `php` page into the forum that will execute the commands we give it
 
 > From this step you can continue to all the following steps
+>
 > - [8.1 Injecting a reverse shell](./Writeup3.md#81-injecting-a-reverse-shell)
 > - [8.2 Injecting a webshell](#82-injecting-a-webshell)
-> - [8.3 Exploiting suExec]()
+> - [8.3 Exploiting suExec](./Writeup2#83-exploiting-suexec)
 
 ### 8.2 Injecting a webshell
 
@@ -207,7 +210,7 @@ Knowing the forum is using Apache, the app location is usually `/var/www`
 
 Using `dirb` we can scan the forum for directories
 
-```
+```text
 dirb https://192.168.140.112/forum
 
 ---- Scanning URL: https://192.168.140.112/forum/ ----
@@ -244,6 +247,7 @@ Now we can use this script as a webshell passing `cmd=COMMAND_TO_EXECUTE` as arg
 Now that we have a terminal-like access as the user www-data we can use it in multiple ways, in this writeup we will focus on the treasure hunt way
 
 > From this step you can continue to all the following steps
+>
 > - [9.2 Getting a FTP access](#92-getting-a-ftp-access)
 > - [10.1 Download squashfs file](./Writeup6.md#101-downloading-squashfs-file)
 > - [13 Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
@@ -261,14 +265,14 @@ We have `read` permissions only on the `/home/LOOKATME` directory
 
 It contains a single file `password` with the following content
 
-```
+```text
 lmezard:G!@M6f4Eatau{sF"
 ```
 
 This looks like credentials, we can use them to connect to the FTP 
 
 > login: `lmezard`
-
+>
 > password: `G!@M6f4Eatau{sF"`
 
 ![Imgur](https://i.imgur.com/dKhMw9p.png)
@@ -277,25 +281,28 @@ We have two files in the FTP server, `fun` and `README`
 
 `README` contains some instructions
 
-```
+```text
 Complete this little challenge and use the result as password for user 'laurie' to login in ssh
 ```
 
 ### 10.2 Getting SSH access as laurie
 
 > From this step you can continue to all the following steps
+>
 > - [11.2 Getting SSH access as thor](#112-getting-ssh-access-as-thor)
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 
 ### 11.2 Getting SSH access as thor
 
 > From this step you can continue to all the following steps
+>
 > - [12. Getting SSH access as zaz](#12-getting-ssh-access-as-zaz)
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 
 ### 12. Getting SSH access as zaz
 
 > From this step you can continue to all the following steps
+>
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 > - [14.3 Buffer overflow the setuid binary](#143-buffer-overflow-the-setuid-binary)
 

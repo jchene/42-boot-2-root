@@ -2,7 +2,7 @@
 
 ## Writeups Map
 
-![](https://i.imgur.com/LjQEswl.png)
+![Imgur](https://i.imgur.com/LjQEswl.png)
 
 ## Summary
 
@@ -13,4 +13,5 @@
 ### 14.3 Ret2LibC
 
 > All the following steps can lead here:
-> - [12. Getting SSH access as zaz ](./Writeup1.md#12-getting-ssh-access-as-zaz)
+>
+> - [12. Getting SSH access as zaz](./Writeup1.md#12-getting-ssh-access-as-zaz)
