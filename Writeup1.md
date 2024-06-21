@@ -285,7 +285,25 @@ We have two files in the FTP server, `fun` and `README`
 Complete this little challenge and use the result as password for user 'laurie' to login in ssh
 ```
 
+`fun` is an archive comtaining multiple .pcap files but despite the extension those files are just text files
+
+Each one contains a piece of C code and a comment with the file number
+
+After compiling all the pieces of code we get this:
+
+```c
+
+```
+
+The SSH password for user is
+
+```text
+330b845f32185747e4f8ca15d40ca59796035c89ea809fb5d30f4da83ecf45a4
+```
+
 ### 10.2 Getting SSH access as laurie
+
+
 
 > From this step you can continue to all the following steps
 >
@@ -294,12 +312,16 @@ Complete this little challenge and use the result as password for user 'laurie' 
 
 ### 11.2 Getting SSH access as thor
 
+
+
 > From this step you can continue to all the following steps
 >
 > - [12. Getting SSH access as zaz](#12-getting-ssh-access-as-zaz)
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 
 ### 12. Getting SSH access as zaz
+
+
 
 > From this step you can continue to all the following steps
 >
