@@ -2,7 +2,7 @@
 
 ## Writeups Map
 
-![Imgur](https://i.imgur.com/LjQEswl.png)
+![Imgur](https://i.imgur.com/io1rZpf.png)
 
 ## Summary
 

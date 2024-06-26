@@ -8,7 +8,7 @@ The machine hosts several services and we will need to find multiple ways to get
 
 ## Writeups Map
 
-![Imgur](https://i.imgur.com/LjQEswl.png)
+![Imgur](https://i.imgur.com/io1rZpf.png)
 
 ## Writeups
 
