@@ -329,7 +329,7 @@ After compiling all the pieces of code we get this password:
 
 > All the following steps can lead here:
 >
-> - [8.3 Exploiting suExec](./Writeup2.md#83-exploiting-suexec)
+> - [11.1 Mounting squashfs file](./Writeup6#111-mounting-squashfs-file)
 > - [11.2 Getting SSH access as thor](#91-getting-a-terminal-access-as-www-data)
 
 A quick inspection of the home directory shows us a binary named "exploit_me" that will be executed as root.

@@ -16,3 +16,16 @@
 >
 > - [6.1 Getting SSH access as laurie@borntosec](./Writeup1.md#61-getting-ssh-access-as-laurieborntosec)
 > - [9.1 Getting a Terminal access as www-data](./Writeup1.md#91-getting-a-terminal-access-as-www-data)
+> - [10.2 Getting SSH access as laurie](./Writeup1.md#102-getting-ssh-access-as-laurie)
+> - [11.2 Getting SSH access as thor](./Writeup1.md#112-getting-ssh-access-as-thor)
+> - [12. Getting SSH access as zaz](./Writeup1.md#12-getting-ssh-access-as-zaz)
+
+We execute the `fakeroot` command
+
+```text
+laurie@BornToSecHackMe:~$ fakeroot
+root@BornToSecHackMe:~# id
+uid=0(root) gid=0(root) groups=0(root),1003(laurie)
+root@BornToSecHackMe:~# whoami
+root
+```
