@@ -8,7 +8,7 @@ The machine hosts several services and we will need to find multiple ways to get
 
 ## Writeups Map
 
-![Imgur](https://i.imgur.com/io1rZpf.png)
+![Imgur](https://i.imgur.com/gb4HAhr.png)
 
 ## Writeups
 
@@ -22,10 +22,8 @@ The machine hosts several services and we will need to find multiple ways to get
 
 - [Writeup 3 - Reverse shell injection](Writeup3.md)
 
-- [Writeup 4 - Ret2LibC](Writeup4.md)
+- [Writeup 4 - Buffer Overflow + Shellcode Injection](Writeup4.md)
 
 - [Writeup 5 - DirtyCow vulnerability](Writeup5.md)
 
-- [Writeup 6 - Squashfs exploitation](Writeup6.md)
-
-- [Writeup 7 - Fakeroot](Writeup7.md)
+- [Writeup 6 - Fakeroot](Writeup7.md)

