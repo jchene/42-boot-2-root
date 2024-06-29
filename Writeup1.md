@@ -254,7 +254,6 @@ Now that we have a terminal-like access as the user www-data we can use it in mu
 > From this step you can continue to all the following steps
 >
 > - [9.2 Getting a FTP access](#92-getting-a-ftp-access)
-> - [10.1 Download squashfs file](./Writeup6.md#101-downloading-squashfs-file)
 > - [13 Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 > - [14.1 Use fakeroot](./Writeup7.md#141-using-fakeroot)
 
@@ -498,7 +497,6 @@ Because as the subject states, we need to swap the (n-1)th and (n-2)th character
 
 > From this step you can continue to all the following steps
 >
-> - [10.1 Downloading squashfs file](./Writeup6.md#101-downloading-squashfs-file)
 > - [11.2 Getting SSH access as thor](#112-getting-ssh-access-as-thor)
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 
@@ -561,7 +559,6 @@ This is the password of the user zaz.
 
 > From this step you can continue to all the following steps
 >
-> - [10.1 Downloading squashfs file](./Writeup6.md#101-downloading-squashfs-file)
 > - [12. Getting SSH access as zaz](#12-getting-ssh-access-as-zaz)
 > - [13. Exploiting DirtyCow](./Writeup5.md#13-exploiting-dirtycow)
 
@@ -569,7 +566,6 @@ This is the password of the user zaz.
 
 > All the following steps can lead here:
 >
-> - [11.1 Mounting squashfs file](./Writeup6#111-mounting-squashfs-file)
 > - [11.2 Getting SSH access as thor](#91-getting-a-terminal-access-as-www-data)
 
 A quick inspection of the home directory shows us a binary named "exploit_me" that will be executed as root.
